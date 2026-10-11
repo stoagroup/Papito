@@ -19,7 +19,7 @@ export function ProductForm({ product, onClose }: { product: Product | null; onC
   const [description, setDescription] = useState(product?.description ?? "");
   const [price, setPrice] = useState(product ? String(product.price) : "");
   const [portion, setPortion] = useState(product?.portion ?? "");
-  const [categoryId, setCategoryId] = useState(product?.categoryId ?? data.categories[0]?.id ?? NEW_CAT);
+  const [categoryId, setCategoryId] = useState(product ? (data.categories.some((c) => c.id === product.categoryId) ? product.categoryId : "") : (data.categories[0]?.id ?? ""));
   const [newCategory, setNewCategory] = useState("");
   const [image, setImage] = useState(product?.image ?? "");
   const [tags, setTags] = useState<ProductTag[]>(product?.tags ?? []);
@@ -36,6 +36,7 @@ export function ProductForm({ product, onClose }: { product: Product | null; onC
     if (name.trim().length < 2) errs.name = "Название — минимум 2 символа.";
     if (!Number.isFinite(priceNum) || priceNum <= 0) errs.price = "Укажите цену больше нуля.";
     if (categoryId === NEW_CAT && newCategory.trim().length < 2) errs.category = "Введите название новой категории.";
+    if (categoryId && categoryId !== NEW_CAT && !data.categories.some((c) => c.id === categoryId)) errs.category = "Категория удалена. Выберите другую категорию.";
     setErrors(errs);
     if (Object.keys(errs).length) return;
 
@@ -107,7 +108,7 @@ export function ProductForm({ product, onClose }: { product: Product | null; onC
               </label>
             </div>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-bold">Категория *</span>
+              <span className="mb-1.5 block text-sm font-bold">Категория</span>
               <select className={inputCls} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
                 <option value="">Без категории</option>
                 {data.categories.map((c) => (

@@ -94,6 +94,8 @@ export type AppData = {
   version: 1;
   /** Не восстанавливать тестовое меню после его удаления пользователем. */
   testMenuInitialized?: boolean;
+  /** Однократное добавление стандартных категорий с сохранением пользовательских изменений. */
+  menuCategoriesInitialized?: boolean;
   categories: Category[];
   products: Product[];
   promotions: Promotion[];

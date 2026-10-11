@@ -11,6 +11,7 @@ import {
   updateSettings, useData, useHydrated,
 } from "@/lib/store";
 import { getCombo } from "@/lib/pricing";
+import { filterMenuProducts } from "@/lib/menu";
 import { formatPrice } from "@/lib/format";
 import { categoryPresets } from "@/data/initialData";
 import { useUI } from "../AppProviders";
@@ -38,9 +39,7 @@ function ProductsTab({ onEdit }: { onEdit: (p: Product | null) => void }) {
   const [cat, setCat] = useState("all");
   const [confirm, setConfirm] = useState<string | null>(null);
   const catName = new Map(data.categories.map((c) => [c.id, c.name]));
-  const list = data.products.filter(
-    (p) => (cat === "all" || p.categoryId === cat) && (!q.trim() || p.name.toLowerCase().includes(q.trim().toLowerCase())),
-  );
+  const list = filterMenuProducts(data.products, cat === "all" ? null : cat, q);
 
   if (data.products.length === 0) {
     return (
@@ -62,7 +61,7 @@ function ProductsTab({ onEdit }: { onEdit: (p: Product | null) => void }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label className="relative flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink/40" />
-          <input className={`${inputCls} py-2.5 pl-10`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск по названию" aria-label="Поиск позиций" />
+          <input className={`${inputCls} py-2.5 pl-10`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Поиск по названию и описанию" aria-label="Поиск позиций" />
         </label>
         <select className={`${inputCls} py-2.5 sm:w-56`} value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Фильтр по категории">
           <option value="all">Все категории</option>

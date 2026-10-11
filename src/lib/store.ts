@@ -28,6 +28,27 @@ function normalize(raw: unknown): AppData {
   if (!raw || typeof raw !== "object") return base;
   const r = raw as Partial<AppData>;
   const products = Array.isArray(r.products) ? r.products : [];
+  const savedCategories = Array.isArray(r.categories) ? r.categories : [];
+  const categories = [...savedCategories];
+  const categoryAliases = new Map<string, string>();
+  if (!r.menuCategoriesInitialized) {
+    for (const category of base.categories) {
+      const existing = categories.find((c) => c.id === category.id || c.name.trim().toLocaleLowerCase("ru") === category.name.toLocaleLowerCase("ru"));
+      if (existing) categoryAliases.set(category.id, existing.id);
+      else categories.push(category);
+    }
+  }
+  const seedProducts = !r.testMenuInitialized && products.length === 0;
+  const menuProducts = (seedProducts ? base.products : products).map((product) => {
+    let categoryId = product.categoryId;
+    if (seedProducts) categoryId = categoryAliases.get(categoryId) ?? categoryId;
+    // Only uncategorized test positions receive a default assignment during migration.
+    if (!r.menuCategoriesInitialized && !categoryId) {
+      categoryId = base.products.find((p) => p.id === product.id)?.categoryId ?? "";
+      categoryId = categoryAliases.get(categoryId) ?? categoryId;
+    }
+    return { ...product, categoryId: categories.some((c) => c.id === categoryId) ? categoryId : "" };
+  });
   const promotions = initialPromotions.map((def) => {
     const saved = Array.isArray(r.promotions) ? r.promotions.find((p) => p.kind === def.kind) : undefined;
     return saved ? { ...def, ...saved } : structuredClone(def);
@@ -35,8 +56,9 @@ function normalize(raw: unknown): AppData {
   return {
     version: 1,
     testMenuInitialized: true,
-    categories: Array.isArray(r.categories) ? r.categories : [],
-    products: !r.testMenuInitialized && products.length === 0 ? base.products : products,
+    menuCategoriesInitialized: true,
+    categories,
+    products: menuProducts,
     promotions,
     settings: {
       ...base.settings,
@@ -75,7 +97,7 @@ function ensureLoaded() {
   loaded = true;
   const savedData = read<Partial<AppData>>(DATA_KEY);
   data = normalize(savedData);
-  if (!savedData || !(savedData as Partial<AppData>).testMenuInitialized) {
+  if (!savedData || !(savedData as Partial<AppData>).testMenuInitialized || !(savedData as Partial<AppData>).menuCategoriesInitialized) {
     write(DATA_KEY, data);
   }
   const savedCart = read(CART_KEY);

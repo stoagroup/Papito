@@ -1,5 +1,6 @@
 import type { AppData, Order, Promotion } from "@/lib/types";
 import { testProducts } from "./testProducts";
+import { menuCategories } from "./categories";
 
 /**
  * Единый источник данных демо-версии.
@@ -60,7 +61,8 @@ export function createInitialData(): AppData {
   return {
     version: 1,
     testMenuInitialized: true,
-    categories: [],
+    menuCategoriesInitialized: true,
+    categories: structuredClone(menuCategories),
     products: structuredClone(testProducts),
     promotions: structuredClone(initialPromotions),
     settings: {
@@ -75,4 +77,4 @@ export function createInitialData(): AppData {
 }
 
 /** Подсказки для быстрого старта — только названия разделов, без блюд. */
-export const categoryPresets = ["Бургеры", "Роллы и шаурма", "Курица и гриль", "Закуски", "Соусы", "Напитки"];
+export const categoryPresets = menuCategories.map((category) => category.name);
