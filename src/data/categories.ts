@@ -9,4 +9,5 @@ export const menuCategories: Category[] = [
   { id: "doner", name: "Донер" },
   { id: "boxes", name: "Боксы" },
   { id: "hot-dog", name: "Хот-дог" },
+  { id: "shashlik", name: "Шашлык" },
 ];

@@ -83,7 +83,7 @@ function ProductsTab({ onEdit }: { onEdit: (p: Product | null) => void }) {
                 {p.portion && ` · ${p.portion}`}
               </p>
             </div>
-            <span className="font-display font-black tabular-nums">{formatPrice(p.price)}</span>
+            <span className="font-display font-black tabular-nums">{(p.pricePending ? "Цена не задана" : formatPrice(p.price))}</span>
             <div className="flex items-center gap-1.5">
               <button type="button" onClick={() => toggleProductAvailability(p.id)} title={p.available ? "Скрыть из продажи" : "Вернуть в продажу"}
                 className={`inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold ${p.available ? "bg-emerald-50 text-emerald-700" : "bg-ink/5 text-ink/50"}`}>
@@ -262,7 +262,7 @@ function PromoEditor({ promo }: { promo: Promotion }) {
                           <input type="checkbox" checked={on} className="size-4 accent-orange"
                             onChange={() => set({ productIds: on ? promo.productIds.filter((x) => x !== p.id) : [...promo.productIds, p.id] })} />
                           <span className="min-w-0 flex-1 truncate font-semibold">{p.name}</span>
-                          <span className="text-ink/50 tabular-nums">{formatPrice(p.price)}</span>
+                          <span className="text-ink/50 tabular-nums">{(p.pricePending ? "Цена не задана" : formatPrice(p.price))}</span>
                         </label>
                       );
                     })}
@@ -291,7 +291,7 @@ function PromoEditor({ promo }: { promo: Promotion }) {
               <select className={inputCls} value={promo.productIds[0] ?? ""} onChange={(e) => set({ productIds: e.target.value ? [e.target.value] : [] })}>
                 <option value="">— не выбрана —</option>
                 {data.products.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} · {formatPrice(p.price)}</option>
+                  <option key={p.id} value={p.id}>{p.name} · {(p.pricePending ? "Цена не задана" : formatPrice(p.price))}</option>
                 ))}
               </select>
             </label>

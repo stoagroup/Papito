@@ -17,7 +17,7 @@ export function ProductForm({ product, onClose }: { product: Product | null; onC
   const { toast } = useUI();
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
-  const [price, setPrice] = useState(product ? String(product.price) : "");
+  const [price, setPrice] = useState(product && !product.pricePending ? String(product.price) : "");
   const [portion, setPortion] = useState(product?.portion ?? "");
   const [categoryId, setCategoryId] = useState(product ? (data.categories.some((c) => c.id === product.categoryId) ? product.categoryId : "") : (data.categories[0]?.id ?? ""));
   const [newCategory, setNewCategory] = useState("");
@@ -34,7 +34,7 @@ export function ProductForm({ product, onClose }: { product: Product | null; onC
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (name.trim().length < 2) errs.name = "Название — минимум 2 символа.";
-    if (!Number.isFinite(priceNum) || priceNum <= 0) errs.price = "Укажите цену больше нуля.";
+    if (price.trim() && (!Number.isFinite(priceNum) || Math.round(priceNum) <= 0)) errs.price = "Укажите цену больше нуля.";
     if (categoryId === NEW_CAT && newCategory.trim().length < 2) errs.category = "Введите название новой категории.";
     if (categoryId && categoryId !== NEW_CAT && !data.categories.some((c) => c.id === categoryId)) errs.category = "Категория удалена. Выберите другую категорию.";
     setErrors(errs);
@@ -46,6 +46,7 @@ export function ProductForm({ product, onClose }: { product: Product | null; onC
       name: name.trim(),
       description: description.trim(),
       price: Math.round(priceNum),
+      pricePending: !price.trim(),
       portion: portion.trim(),
       categoryId: catId,
       image,
@@ -64,6 +65,7 @@ export function ProductForm({ product, onClose }: { product: Product | null; onC
     name: name || "Название позиции",
     description: description || "Описание появится здесь",
     price: Number.isFinite(priceNum) && priceNum > 0 ? Math.round(priceNum) : 0,
+    pricePending: !price.trim(),
     portion,
     categoryId,
     image,
@@ -98,9 +100,10 @@ export function ProductForm({ product, onClose }: { product: Product | null; onC
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-bold">Цена, ₽ *</span>
+                <span className="mb-1.5 block text-sm font-bold">Цена, ₽</span>
                 <input className={inputCls} value={price} onChange={(e) => setPrice(e.target.value.replace(/[^\d.,]/g, ""))} inputMode="decimal" />
                 {err("price")}
+                <span className="mt-1 block text-xs text-ink/60">Без цены товар виден в меню, но недоступен для заказа.</span>
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-sm font-bold">Вес / объём</span>

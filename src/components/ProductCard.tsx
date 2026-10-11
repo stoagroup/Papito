@@ -3,7 +3,7 @@
 import { Minus, Plus, ShoppingBag } from "lucide-react";
 import type { AppData, CartLine, Product } from "@/lib/types";
 import { addToCart, setCartQty } from "@/lib/store";
-import { productPrice } from "@/lib/pricing";
+import { canOrderProduct, productPrice } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
 import { useUI } from "./AppProviders";
 import { FoodImage } from "./ui";
@@ -18,6 +18,7 @@ export const TAG_META: Record<Product["tags"][number], { label: string; cls: str
 export function ProductCard({ product, data, line, highlighted }: { product: Product; data: AppData; line?: CartLine; highlighted?: boolean }) {
   const { toast } = useUI();
   const { price, oldPrice } = productPrice(product, data);
+  const orderable = canOrderProduct(product);
 
   const add = () => {
     addToCart("product", product.id);
@@ -54,13 +55,13 @@ export function ProductCard({ product, data, line, highlighted }: { product: Pro
         </div>
         {product.description && <p className="mt-2 line-clamp-3 text-sm leading-relaxed break-words text-ink/60">{product.description}</p>}
 
-        <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+        <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-5">
           <div className="leading-none">
             {oldPrice !== null && <div className="mb-1 text-sm font-semibold text-ink/40 line-through">{formatPrice(oldPrice)}</div>}
-            <div className={`font-display text-2xl font-black ${oldPrice !== null ? "text-brand" : "text-ink"}`}>{formatPrice(price)}</div>
+            {product.pricePending ? <p className="text-sm font-semibold text-ink/60">Цена уточняется</p> : <div className={`font-display text-2xl font-black ${oldPrice !== null ? "text-brand" : "text-ink"}`}>{formatPrice(price)}</div>}
           </div>
 
-          {line ? (
+          {line && orderable ? (
             <div className="flex items-center gap-1 rounded-full bg-ink p-1 text-cream">
               <button
                 type="button"
@@ -84,7 +85,8 @@ export function ProductCard({ product, data, line, highlighted }: { product: Pro
             <button
               type="button"
               onClick={add}
-              disabled={!product.available}
+              disabled={!orderable}
+              title={product.pricePending ? "Заказ будет доступен после подтверждения цены" : undefined}
               className="inline-flex h-11 items-center gap-2 rounded-full bg-orange px-5 text-sm font-extrabold text-ink transition hover:bg-yellow-400 disabled:pointer-events-none disabled:bg-ink/20"
             >
               <ShoppingBag className="size-4" /> В корзину

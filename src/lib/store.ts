@@ -4,6 +4,8 @@ import { useSyncExternalStore } from "react";
 import { createInitialData, initialPromotions } from "@/data/initialData";
 import type { AppData, CartLine, Category, Order, OrderStatus, Product, Promotion, Settings } from "./types";
 import { uid } from "./format";
+import { realProducts } from "@/data/realProducts";
+import { canOrderProduct } from "./pricing";
 
 /**
  * Клиентское хранилище демо-версии: одно состояние для меню, акций,
@@ -53,10 +55,30 @@ function normalize(raw: unknown): AppData {
     const saved = Array.isArray(r.promotions) ? r.promotions.find((p) => p.kind === def.kind) : undefined;
     return saved ? { ...def, ...saved } : structuredClone(def);
   });
+  if (!r.realMenuInitialized) {
+    const nameKey = (name: string) => name.toLocaleLowerCase("ru").replace(/[«»"']/g, "").replace(/\s+/g, " ").trim();
+    for (const product of realProducts) {
+      const category = base.categories.find((c) => c.id === product.categoryId)!;
+      let targetCategory = categories.find((c) => c.id === category.id || nameKey(c.name) === nameKey(category.name));
+      if (!targetCategory) {
+        targetCategory = category;
+        categories.push(category);
+      }
+      const existing = menuProducts.find((p) => p.id === product.id || nameKey(p.name) === nameKey(product.name));
+      if (existing) {
+        existing.image = product.image;
+        existing.categoryId = targetCategory.id;
+        existing.pricePending = existing.pricePending ?? !(Number.isFinite(existing.price) && existing.price > 0);
+      } else {
+        menuProducts.push({ ...product, categoryId: targetCategory.id });
+      }
+    }
+  }
   return {
     version: 1,
     testMenuInitialized: true,
     menuCategoriesInitialized: true,
+    realMenuInitialized: true,
     categories,
     products: menuProducts,
     promotions,
@@ -97,7 +119,7 @@ function ensureLoaded() {
   loaded = true;
   const savedData = read<Partial<AppData>>(DATA_KEY);
   data = normalize(savedData);
-  if (!savedData || !(savedData as Partial<AppData>).testMenuInitialized || !(savedData as Partial<AppData>).menuCategoriesInitialized) {
+  if (!savedData || !(savedData as Partial<AppData>).testMenuInitialized || !(savedData as Partial<AppData>).menuCategoriesInitialized || !(savedData as Partial<AppData>).realMenuInitialized) {
     write(DATA_KEY, data);
   }
   const savedCart = read(CART_KEY);
@@ -267,6 +289,10 @@ export function resetAll() {
 /* ---------- Корзина ---------- */
 
 export function addToCart(kind: CartLine["kind"], refId: string, qty = 1) {
+  if (kind === "product") {
+    const product = getData().products.find((p) => p.id === refId);
+    if (!product || !canOrderProduct(product)) return;
+  }
   updateCart((c) => {
     const existing = c.find((l) => l.kind === kind && l.refId === refId);
     if (existing) return c.map((l) => (l === existing ? { ...l, qty: Math.min(99, l.qty + qty) } : l));

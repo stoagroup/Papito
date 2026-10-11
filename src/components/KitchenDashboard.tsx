@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   Archive, ArchiveRestore, Bike, ChevronLeft, ChevronRight, ClipboardList, Eye, FlaskConical, MessageSquare, Pause, Play, Plus, RotateCcw, Store, Timer, Trash2, Zap,
 } from "lucide-react";
+import { canOrderProduct } from "@/lib/pricing";
 import type { Order } from "@/lib/types";
 import {
   STATUS_ORDER, archiveOrder, deleteOrder, orderProgress, placeOrder, restartOrder, setOrderAuto, setOrderStatus, togglePause, useData, useHydrated,
@@ -148,7 +149,7 @@ export function KitchenDashboard() {
 
   const active = data.orders.filter((o) => !o.archived);
   const archived = data.orders.filter((o) => o.archived);
-  const available = data.products.filter((p) => p.available);
+  const available = data.products.filter(canOrderProduct);
 
   const createTestOrder = () => {
     if (!available.length) return;

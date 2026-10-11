@@ -10,6 +10,8 @@ export type Product = {
   name: string;
   description: string;
   price: number;
+  /** Цена ещё не задана: служебный ноль не показывается и не допускается к заказу. */
+  pricePending?: boolean;
   categoryId: string;
   /** Путь к фото, URL или data:URL загруженного файла. Пустая строка — фирменная заглушка. */
   image: string;
@@ -96,6 +98,7 @@ export type AppData = {
   testMenuInitialized?: boolean;
   /** Однократное добавление стандартных категорий с сохранением пользовательских изменений. */
   menuCategoriesInitialized?: boolean;
+  realMenuInitialized?: boolean;
   categories: Category[];
   products: Product[];
   promotions: Promotion[];

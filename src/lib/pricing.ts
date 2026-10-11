@@ -1,6 +1,10 @@
 import type { AppData, CartLine, Product, Promotion } from "./types";
 import { phoneDigits } from "./format";
 
+export function canOrderProduct(product: Product) {
+  return product.available && !product.pricePending && Number.isFinite(product.price) && product.price > 0;
+}
+
 export function findPromo(data: AppData, kind: Promotion["kind"]) {
   return data.promotions.find((p) => p.kind === kind);
 }
@@ -9,7 +13,7 @@ export function findPromo(data: AppData, kind: Promotion["kind"]) {
 export function getDailyDeal(data: AppData) {
   const promo = findPromo(data, "daily");
   if (!promo || !promo.active || promo.discountPercent <= 0) return null;
-  const product = data.products.find((p) => p.id === promo.productIds[0] && p.available);
+  const product = data.products.find((p) => p.id === promo.productIds[0] && canOrderProduct(p));
   if (!product) return null;
   return { promo, product };
 }
@@ -34,7 +38,7 @@ export function getCombo(data: AppData) {
     promo.active &&
     products.length >= 2 &&
     products.length === promo.productIds.length &&
-    products.every((p) => p.available) &&
+    products.every(canOrderProduct) &&
     promo.comboPrice !== null &&
     promo.comboPrice > 0;
   return { promo, products, regular, price: promo.comboPrice ?? 0, ready };
@@ -58,7 +62,7 @@ export function resolveCart(cart: CartLine[], data: AppData): ResolvedLine[] {
   for (const line of cart) {
     if (line.kind === "product") {
       const p = data.products.find((x) => x.id === line.refId);
-      if (!p || !p.available) continue;
+      if (!p || !canOrderProduct(p)) continue;
       const { price, oldPrice } = productPrice(p, data);
       lines.push({ ...line, name: p.name, image: p.image, unitPrice: price, oldUnitPrice: oldPrice, details: [] });
     } else {

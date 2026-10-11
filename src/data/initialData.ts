@@ -1,11 +1,12 @@
 import type { AppData, Order, Promotion } from "@/lib/types";
 import { testProducts } from "./testProducts";
 import { menuCategories } from "./categories";
+import { realProducts } from "./realProducts";
 
 /**
  * Единый источник данных демо-версии.
  *
- * Временное меню содержит ровно три позиции из testProducts.ts.
+ * Меню содержит три тестовые позиции и семь предоставленных товаров без подтверждённых цен.
  * Изменения в панели управления (/admin) сохраняются в localStorage браузера.
  * Акции описывают механику, а конкретные блюда и цены к ним
  * привязываются из меню.
@@ -62,8 +63,9 @@ export function createInitialData(): AppData {
     version: 1,
     testMenuInitialized: true,
     menuCategoriesInitialized: true,
+    realMenuInitialized: true,
     categories: structuredClone(menuCategories),
-    products: structuredClone(testProducts),
+    products: structuredClone([...testProducts, ...realProducts]),
     promotions: structuredClone(initialPromotions),
     settings: {
       deliveryFee: 0,
